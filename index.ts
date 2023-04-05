@@ -171,3 +171,31 @@ export const createRegistration = (payload: CreateRegistrationStruct): Registrat
     scope: payload.scope || [],
   }
 }
+
+/**
+ * Creates a new instance of Pigeon, your project will most likely only have one of these
+ * but you can create multiple.
+ */
+export const createPigeon = () => {
+  const components: Map<Typename, RegistrationStruct> = new Map()
+
+  return {
+    components,
+    /**
+     * Use this to register your components to pigeon, under the hood this uses a `Map`.
+     * Meaning you can register the same component twice and only the latest one will be
+     * used.
+     */
+    register: function (component: RegistrationStruct) {
+      components.set(component.__typename, component)
+      return this
+    },
+    scope: (scope: Scope) => {
+      return {
+        query: () => undefined,
+        fragment: () => undefined,
+        validate: () => undefined,
+      }
+    },
+  }
+}
