@@ -142,18 +142,34 @@ export type RegistrationStruct = {
 /**
  * Data structure used when creating a registration for a piece of CMS content
  */
-type CreateRegistrationStruct = Omit<RegistrationStruct, "fragmentName"> & {
+type CreateRegistrationStruct = Omit<RegistrationStruct, "fragmentName" | "dependencies" | "scope"> & {
   dependencies?: RegistrationStruct["dependencies"]
   scope?: RegistrationStruct["scope"]
 }
 
-// FIXME: Method stub
+/**
+ * Use this method to prepare a piece of content for registration with Pigeon.
+ *
+ * ### Example
+ * ```ts
+ * const hero = createRegistration({
+ *  __typename: "HeroRecord",
+ *  fragment: `title description`,
+ *  schema: z.object({}),
+ *  dependencies: [image.fragmentName],
+ *  scope: ["page", "articles"]
+ * })
+ * ```
+ */
 export const createRegistration = (payload: CreateRegistrationStruct): RegistrationStruct => {
+  const fragmentName = `${payload.__typename}Fragment`
+  const fragment = `fragment ${fragmentName} on ${payload.__typename} {${payload.fragment}}`
+
   return {
     __typename: payload.__typename,
     dependencies: payload.dependencies || [],
-    fragment: payload.fragment,
-    fragmentName: payload.__typename,
+    fragment,
+    fragmentName,
     schema: payload.schema,
     scope: payload.scope || [],
   }
