@@ -31,6 +31,7 @@ describe("Create Registration", () => {
       __typename: "Hero",
       fragment: ``,
       schema: z.object({}),
+      scope: undefined,
     })
 
     expect(hero.dependencies).not.toBeUndefined()
