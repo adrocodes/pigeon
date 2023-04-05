@@ -1,5 +1,3 @@
-import { z } from "zod"
-
 type Typename = string
 type Scope = string
 
@@ -62,12 +60,11 @@ export type RegistrationStruct = {
    * component props.
    *
    * ```ts
-   * import { createRegistration, cmsSchema } from "@adrocodes/pigeon"
-   *
    * const Hero = createRegistration({
    *  __typename: "Hero",
-   *  schema: cmsSchema("Hero")
-   *    .extend({ title: z.string() })
+   *  schema: z.object({
+   *      title: z.string()
+   *    })
    *    .transform((input) => ({
    *      heading: input.title
    *    }))
@@ -173,12 +170,4 @@ export const createRegistration = (payload: CreateRegistrationStruct): Registrat
     schema: payload.schema,
     scope: payload.scope || [],
   }
-}
-
-// FIXME: Complete
-export const cmsSchema = <T extends Typename>(__typename: T) => {
-  return z.object({
-    id: z.string(),
-    __typename: z.enum([__typename]),
-  })
 }
