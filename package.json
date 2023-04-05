@@ -6,7 +6,7 @@
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsup index.ts --format cjs,esm --dts",
+    "build": "tsup index.ts --format cjs,esm --dts --minify",
     "lint": "tsc",
     "changeset": "changeset",
     "release": "pnpm run build && changeset publish",
