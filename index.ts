@@ -90,13 +90,13 @@ export type RegistrationStruct = {
    * })
    *
    * const query = gql`
-   *  ${pigeon.fromScope("article").fragments()}
+   *  ${pigeon.scope("article").fragments()}
    *
    *  query Article {
    *    page(...) {
    *      flexibleContent {
    *        __typename
-   *        ${pigeon.fromScope("article").query()}
+   *        ${pigeon.scope("article").query()}
    *      }
    *    }
    *  }
@@ -207,7 +207,31 @@ export const createPigeon = () => {
 
       return {
         components: scopedComponents,
-        query: () => undefined,
+        /**
+         * Generates the query needed in the flexible content query.
+         *
+         * ```ts
+         * const query = gql`
+         *  query Article {
+         *    page(...) {
+         *      flexibleContent {
+         *        __typename
+         *        ${pigeon.scope("article").query()}
+         *      }
+         *    }
+         *  }
+         * `
+         * ```
+         */
+        query: (): string => {
+          const query: string[] = []
+
+          for (const [key, value] of scopedComponents) {
+            query.push(`...on ${key} { ...${value.fragmentName} }`)
+          }
+
+          return query.join("\n")
+        },
         fragment: () => undefined,
         validate: () => undefined,
       }

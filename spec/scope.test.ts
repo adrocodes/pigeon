@@ -33,4 +33,16 @@ describe("Pigeon - Scope", () => {
     expect(pageScope.components.has("Hero")).toBeTruthy()
     expect(pageScope.components.has("Image")).toBeFalsy()
   })
+
+  test("query creation", () => {
+    const pigeon = createPigeon()
+
+    pigeon.register(genericHero).register(genericImage)
+    const pageScope = pigeon.scope("page")
+    const query = pageScope.query()
+
+    expect(query).not.toEqual("")
+    expect(query).toContain("...on Hero { ...HeroFragment }")
+    expect(query).not.toContain("...on Image { ...ImageFragment }")
+  })
 })
