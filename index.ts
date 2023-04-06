@@ -190,6 +190,12 @@ export const createPigeon = () => {
       components.set(component.__typename, component)
       return this
     },
+    /**
+     * Extract a subset of components by scope, use this to generate queries, fragments
+     * and validate data against the CMS data.
+     *
+     * `scope` expects a non-empty string
+     */
     scope: <S extends Scope>(scope: S extends "" ? never : S) => {
       const scopedComponents: Map<Typename, RegistrationStruct> = new Map()
 
