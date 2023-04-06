@@ -190,8 +190,17 @@ export const createPigeon = () => {
       components.set(component.__typename, component)
       return this
     },
-    scope: (scope: Scope) => {
+    scope: <S extends Scope>(scope: S extends "" ? never : S) => {
+      const scopedComponents: Map<Typename, RegistrationStruct> = new Map()
+
+      components.forEach((value) => {
+        if (value.scope.includes(scope)) {
+          scopedComponents.set(value.__typename, value)
+        }
+      })
+
       return {
+        components: scopedComponents,
         query: () => undefined,
         fragment: () => undefined,
         validate: () => undefined,
