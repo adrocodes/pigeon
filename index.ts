@@ -153,7 +153,7 @@ type CreateRegistrationStruct = Omit<RegistrationStruct, "fragmentName" | "depen
  *  __typename: "HeroRecord",
  *  fragment: `title description`,
  *  schema: z.object({}),
- *  dependencies: [image.fragmentName],
+ *  dependencies: [image.__typename],
  *  scope: ["page", "articles"]
  * })
  * ```
