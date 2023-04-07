@@ -1,5 +1,6 @@
 type Typename = string
 type Scope = string
+type ComponentMap = Map<Typename, RegistrationStruct>
 
 export type RegistrationStruct = {
   /**
@@ -172,12 +173,20 @@ export const createRegistration = (payload: CreateRegistrationStruct): Registrat
   }
 }
 
+const recursivelyCollectFragments = (components: ComponentMap, value: RegistrationStruct, collected: ComponentMap) => {
+  collected.set(value.__typename, value)
+  for (let i = 0; i < value.dependencies.length; i++) {
+    const next = components.get(value.dependencies[i] as string)
+    if (next) recursivelyCollectFragments(components, next, collected)
+  }
+}
+
 /**
  * Creates a new instance of Pigeon, your project will most likely only have one of these
  * but you can create multiple.
  */
 export const createPigeon = () => {
-  const components: Map<Typename, RegistrationStruct> = new Map()
+  const components: ComponentMap = new Map()
 
   return {
     components,
@@ -197,7 +206,7 @@ export const createPigeon = () => {
      * `scope` expects a non-empty string
      */
     scope: <S extends Scope>(scope: S extends "" ? never : S) => {
-      const scopedComponents: Map<Typename, RegistrationStruct> = new Map()
+      const scopedComponents: ComponentMap = new Map()
 
       components.forEach((value) => {
         if (value.scope.includes(scope)) {
@@ -232,7 +241,12 @@ export const createPigeon = () => {
 
           return query.join("\n")
         },
-        fragment: () => undefined,
+        fragment: () => {
+          const map: ComponentMap = new Map()
+          for (const value of scopedComponents.values()) {
+            recursivelyCollectFragments(components, value, map)
+          }
+        },
         validate: () => undefined,
       }
     },
