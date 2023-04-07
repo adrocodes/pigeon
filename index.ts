@@ -232,7 +232,7 @@ export const createPigeon = () => {
          * `
          * ```
          */
-        query: (): string => {
+        query: () => {
           const query: string[] = []
 
           for (const [key, value] of scopedComponents) {
@@ -241,11 +241,37 @@ export const createPigeon = () => {
 
           return query.join("\n")
         },
-        fragment: () => {
+        /**
+         * Generates the fragments needed for a scoped query.
+         *
+         * ```ts
+         * const query = gql`
+         *  ${pigeon.scope("article").fragments()}
+         *
+         *  query Article {
+         *    page(...) {
+         *      flexibleContent {
+         *        __typename
+         *        ${pigeon.scope("article").query()}
+         *      }
+         *    }
+         *  }
+         * `
+         * ```
+         */
+        fragments: () => {
           const map: ComponentMap = new Map()
           for (const value of scopedComponents.values()) {
             recursivelyCollectFragments(components, value, map)
           }
+
+          const fragments: string[] = []
+
+          for (const value of map.values()) {
+            fragments.push(value.fragment)
+          }
+
+          return fragments.join("\n")
         },
         validate: () => undefined,
       }

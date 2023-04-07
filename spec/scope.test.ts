@@ -45,4 +45,16 @@ describe("Pigeon - Scope", () => {
     expect(query).toContain("...on Hero { ...HeroFragment }")
     expect(query).not.toContain("...on Image { ...ImageFragment }")
   })
+
+  test("fragment collection", () => {
+    const pigeon = createPigeon()
+
+    pigeon.register(genericHero).register(genericImage)
+    const pageScope = pigeon.scope("page")
+    const fragments = pageScope.fragments()
+
+    expect(fragments).not.toEqual("")
+    expect(fragments).toContain("fragment HeroFragment on Hero")
+    expect(fragments).toContain("fragment ImageFragment on Image")
+  })
 })
