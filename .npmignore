@@ -1,0 +1,10 @@
+.changeset
+.github
+.vscode
+spec
+.eslintrc.json
+.nvmrc
+.prettierignore
+.prettierrc
+vitest.config.ts
+tsconfig.ts
