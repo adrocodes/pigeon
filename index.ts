@@ -198,7 +198,7 @@ export const createPigeon = () => {
      * Meaning you can register the same component twice and only the latest one will be
      * used.
      */
-    register: function (component: RegistrationStruct) {
+    register: function <T extends Typename = Typename>(component: RegistrationStruct<T>) {
       components.set(component.__typename, component)
       return this
     },
