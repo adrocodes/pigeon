@@ -7,7 +7,7 @@ const createGenericHero = () =>
     __typename: "Hero",
     dependencies: [],
     fragment: "title",
-    schema: z.object({}),
+    schema: z.object({ __typename: z.enum(["Hero"]) }),
     scope: [],
   })
 
@@ -30,7 +30,7 @@ describe("Create Registration", () => {
     const hero = createRegistration({
       __typename: "Hero",
       fragment: ``,
-      schema: z.object({}),
+      schema: z.object({ __typename: z.enum(["Hero"]) }),
       scope: undefined,
     })
 
@@ -45,7 +45,7 @@ describe("Create Registration", () => {
     const hero = createRegistration({
       __typename: "Hero",
       fragment: ``,
-      schema: z.object({}),
+      schema: z.object({ __typename: z.enum(["Hero"]) }),
       dependencies: ["Image"],
       scope: ["page"],
     })
