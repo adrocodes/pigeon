@@ -1,5 +1,11 @@
 # @adrocodes/pigeon
 
+## 0.1.1
+
+### Patch Changes
+
+- 6d69f0b: Add npmignore file
+
 ## 0.1.0
 
 ### Minor Changes
