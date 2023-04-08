@@ -2,12 +2,12 @@ type Typename = string
 type Scope = string
 type ComponentMap = Map<Typename, RegistrationStruct>
 
-export type RegistrationStruct = {
+export type RegistrationStruct<T extends Typename = Typename> = {
   /**
    * This should match up with the `__typename` value in your
    * GraphQL CMS.
    */
-  __typename: Typename
+  __typename: T
 
   /**
    * The fragment used to pull in the content specified by your `schema`.
@@ -72,7 +72,7 @@ export type RegistrationStruct = {
    * })
    * ```
    */
-  schema: import("zod").Schema
+  schema: import("zod").ZodSchema<{ __typename: T }>
   /**
    * The scope allows content to be scoped to specific regions/content models.
    * Dynamically built queries & fragment inclusion will be based on the scope.
@@ -140,7 +140,10 @@ export type RegistrationStruct = {
 /**
  * Data structure used when creating a registration for a piece of CMS content
  */
-type CreateRegistrationStruct = Omit<RegistrationStruct, "fragmentName" | "dependencies" | "scope"> & {
+type CreateRegistrationStruct<T extends Typename = Typename> = Omit<
+  RegistrationStruct<T>,
+  "fragmentName" | "dependencies" | "scope"
+> & {
   dependencies?: RegistrationStruct["dependencies"]
   scope?: RegistrationStruct["scope"]
 }
@@ -159,7 +162,7 @@ type CreateRegistrationStruct = Omit<RegistrationStruct, "fragmentName" | "depen
  * })
  * ```
  */
-export const createRegistration = (payload: CreateRegistrationStruct): RegistrationStruct => {
+export const createRegistration = <T extends Typename>(payload: CreateRegistrationStruct<T>): RegistrationStruct<T> => {
   const fragmentName = `${payload.__typename}Fragment`
   const fragment = `fragment ${fragmentName} on ${payload.__typename} {${payload.fragment}}`
 
@@ -273,7 +276,37 @@ export const createPigeon = () => {
 
           return fragments.join("\n")
         },
-        validate: () => undefined,
+        /**
+         * Given a list of results from a GraphQL query, this function will loop through
+         * each entry and attempt to validate it against the registered schema.
+         *
+         * If a entry is not apart of the scope - it will be ignored and not present in the
+         * returned results.
+         *
+         * If **any** of the validations fail, this method will throw a `ZodError`.
+         *
+         * ### Example
+         * ```ts
+         * const { data } = await client.query({ query })
+         *
+         * const results = await pigeon.scope("page").validate(data.flexibleContent)
+         * ```
+         *
+         * @throws {import("zod").ZodError}
+         */
+        validate: async <T extends Typename, D extends { __typename: T }>(data: D[]) => {
+          const validationPromises = []
+          for (const value of data) {
+            const component = scopedComponents.get(value.__typename)
+
+            if (component) {
+              validationPromises.push(component.schema.parseAsync(value))
+            }
+          }
+
+          const result = await Promise.all(validationPromises)
+          return result
+        },
       }
     },
   }

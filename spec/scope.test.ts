@@ -1,15 +1,14 @@
 import { describe, test, expect } from "vitest"
-import { z } from "zod"
+import { ZodError, z } from "zod"
 import { createPigeon, createRegistration } from "../index"
 
 const genericImage = createRegistration({
   __typename: "Image",
-  dependencies: [],
   fragment: "url",
-  schema: z.object({ src: z.string() }).transform((input) => ({
-    src: input.src,
+  schema: z.object({ __typename: z.enum(["Image"]), url: z.string() }).transform((input) => ({
+    __typename: input.__typename,
+    src: input.url,
   })),
-  scope: [],
 })
 
 const genericHero = createRegistration({
@@ -17,6 +16,7 @@ const genericHero = createRegistration({
   dependencies: [genericImage.__typename],
   fragment: `title image { ...${genericImage.fragmentName} }`,
   schema: z.object({
+    __typename: z.enum(["Hero"]),
     title: z.string(),
     image: genericImage.schema,
   }),
@@ -56,5 +56,36 @@ describe("Pigeon - Scope", () => {
     expect(fragments).not.toEqual("")
     expect(fragments).toContain("fragment HeroFragment on Hero")
     expect(fragments).toContain("fragment ImageFragment on Image")
+  })
+
+  test("result validation - success", async () => {
+    const pigeon = createPigeon()
+
+    pigeon.register(genericHero).register(genericImage)
+    const pageScope = pigeon.scope("page")
+
+    const data = [{ __typename: "Hero", title: "Hero Example", image: { __typename: "Image", url: "https://image" } }]
+
+    await expect(pageScope.validate(data)).resolves.toEqual([
+      {
+        __typename: "Hero",
+        title: "Hero Example",
+        image: {
+          __typename: "Image",
+          src: "https://image",
+        },
+      },
+    ])
+  })
+
+  test("result validation - fails", async () => {
+    const pigeon = createPigeon()
+
+    pigeon.register(genericHero).register(genericImage)
+    const pageScope = pigeon.scope("page")
+
+    const data = [{ __typename: "Hero", image: { __typename: "Image", url: "https://image" } }]
+
+    await expect(pageScope.validate(data)).rejects.toThrowError(ZodError)
   })
 })
