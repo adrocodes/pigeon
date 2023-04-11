@@ -16,7 +16,7 @@ It also allows you to write your components once and create CMS specific integra
 
 ### CMS Model Setup
 
-> TODO:
+Pigeon works on the assumption that you're allowing clients to structure pages using "blocks" of content, similar to lego. The author has the choice of multiple components to place on the page. I borrow the "Flexible Content" terminology from Advanced Custom Fields (WordPress), but whatever naming works. Essentially in the end you'll be building out a query which will return an array of different components.
 
 #### Model
 
