@@ -32,7 +32,7 @@ Pigeon works on the assumption that you're allowing clients to structure pages u
 
 ### Manual GraphQL definition
 
-> TODO:
+With the model above, you'd be expected to write a query similar to the one below. We're separating out the different components are fragments, this allows for reuse if a different page content type uses the same component, its better to have a single source of truth.
 
 ```graphql
 fragment HeroFragment on PigeonHeroRecord {
