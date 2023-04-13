@@ -5,6 +5,10 @@
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
+  "repository": {
+    "url": "https://github.com/adrocodes/pigeon"
+  },
+  "keywords": ["jamstack", "graphql", "zod"],
   "scripts": {
     "build": "tsup index.ts --format cjs,esm --dts --minify",
     "lint": "tsc",
