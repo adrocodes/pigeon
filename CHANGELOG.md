@@ -1,5 +1,11 @@
 # @adrocodes/pigeon
 
+## 0.1.2
+
+### Patch Changes
+
+- 737295c: Updated package json for npm page
+
 ## 0.1.1
 
 ### Patch Changes
