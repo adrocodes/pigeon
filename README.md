@@ -12,7 +12,7 @@ It also allows you to write your components once and create CMS specific integra
 
 ## How it works
 
-> TODO:
+With Pigeon you'll be defining a consistent schema for your data which includes a validation model using `zod`, incoming CMS data will be validated against this data to ensure you get the data you're expecting. Additionally, creating dependencies between components will allow you to generate GraphQL queries and collect fragments for those queries to make the integration easy.
 
 ### CMS Model Setup
 
