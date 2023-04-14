@@ -1,14 +1,18 @@
 {
   "name": "@adrocodes/pigeon",
   "license": "MIT",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "repository": {
     "url": "https://github.com/adrocodes/pigeon"
   },
-  "keywords": ["jamstack", "graphql", "zod"],
+  "keywords": [
+    "jamstack",
+    "graphql",
+    "zod"
+  ],
   "scripts": {
     "build": "tsup index.ts --format cjs,esm --dts --minify",
     "lint": "tsc",
