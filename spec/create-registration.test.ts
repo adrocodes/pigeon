@@ -35,10 +35,10 @@ describe("Create Registration", () => {
     })
 
     expect(hero.dependencies).not.toBeUndefined()
-    expect(hero.dependencies.length).toBe(0)
+    expect(hero.dependencies?.length).toBe(0)
 
     expect(hero.scope).not.toBeUndefined()
-    expect(hero.scope.length).toBe(0)
+    expect(hero.scope?.length).toBe(0)
   })
 
   test("Doesn't override optional fields", () => {
@@ -51,11 +51,11 @@ describe("Create Registration", () => {
     })
 
     expect(hero.dependencies).not.toBeUndefined()
-    expect(hero.dependencies.length).toBe(1)
-    expect(hero.dependencies[0]).toEqual("Image")
+    expect(hero.dependencies?.length).toBe(1)
+    expect(hero.dependencies?.[0]).toEqual("Image")
 
     expect(hero.scope).not.toBeUndefined()
-    expect(hero.scope.length).toBe(1)
-    expect(hero.scope[0]).toEqual("page")
+    expect(hero.scope?.length).toBe(1)
+    expect(hero.scope?.[0]).toEqual("page")
   })
 })

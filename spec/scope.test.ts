@@ -25,7 +25,7 @@ const genericHero = createRegistration({
 
 describe("Pigeon - Scope", () => {
   test("correct scopes components", () => {
-    const pigeon = createPigeon()
+    const pigeon = createPigeon([genericHero, genericImage])
 
     pigeon.register(genericHero).register(genericImage)
     const pageScope = pigeon.scope("page")
