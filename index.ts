@@ -1,13 +1,20 @@
+import type { ZodSchema } from "zod"
+
 type Typename = string
 type Scope = string
 type ComponentMap = Map<Typename, RegistrationStruct>
+type Schema<TName extends Typename = Typename> = ZodSchema<{ __typename: TName }>
 
-export type RegistrationStruct<T extends Typename = Typename> = {
+export type RegistrationStruct<
+  TName extends Typename = Typename,
+  TScope extends Scope = Scope,
+  TSchema extends Schema = Schema<TName>,
+> = {
   /**
    * This should match up with the `__typename` value in your
    * GraphQL CMS.
    */
-  __typename: T
+  __typename: TName
 
   /**
    * The fragment used to pull in the content specified by your `schema`.
@@ -55,7 +62,7 @@ export type RegistrationStruct<T extends Typename = Typename> = {
    * })
    * ```
    */
-  dependencies: Typename[]
+  dependencies?: Typename[]
   /**
    * The schema used to validate and transform the CMS data into your
    * component props.
@@ -72,7 +79,7 @@ export type RegistrationStruct<T extends Typename = Typename> = {
    * })
    * ```
    */
-  schema: import("zod").ZodSchema<{ __typename: T }>
+  schema: TSchema
   /**
    * The scope allows content to be scoped to specific regions/content models.
    * Dynamically built queries & fragment inclusion will be based on the scope.
@@ -123,7 +130,7 @@ export type RegistrationStruct<T extends Typename = Typename> = {
    * ```
    * ```
    */
-  scope: Scope[]
+  scope?: TScope[]
   /**
    * The generated Fragment name for this content. This is used when building
    * fragments for components that depend on this one.
@@ -140,13 +147,11 @@ export type RegistrationStruct<T extends Typename = Typename> = {
 /**
  * Data structure used when creating a registration for a piece of CMS content
  */
-type CreateRegistrationStruct<T extends Typename = Typename> = Omit<
-  RegistrationStruct<T>,
-  "fragmentName" | "dependencies" | "scope"
-> & {
-  dependencies?: RegistrationStruct["dependencies"]
-  scope?: RegistrationStruct["scope"]
-}
+type CreateRegistrationStruct<
+  TName extends Typename = Typename,
+  TScope extends Scope = Scope,
+  TSchema extends Schema = Schema<TName>,
+> = Omit<RegistrationStruct<TName, TScope, TSchema>, "fragmentName">
 
 /**
  * Use this method to prepare a piece of content for registration with Pigeon.
@@ -162,7 +167,13 @@ type CreateRegistrationStruct<T extends Typename = Typename> = Omit<
  * })
  * ```
  */
-export const createRegistration = <T extends Typename>(payload: CreateRegistrationStruct<T>): RegistrationStruct<T> => {
+export const createRegistration = <
+  TName extends Typename = Typename,
+  TScope extends Scope = Scope,
+  TSchema extends Schema = Schema<TName>,
+>(
+  payload: CreateRegistrationStruct<TName, TScope, TSchema>,
+): RegistrationStruct<TName, TScope, TSchema> => {
   const fragmentName = `${payload.__typename}Fragment`
   const fragment = `fragment ${fragmentName} on ${payload.__typename} {${payload.fragment}}`
 
@@ -178,6 +189,8 @@ export const createRegistration = <T extends Typename>(payload: CreateRegistrati
 
 const recursivelyCollectFragments = (components: ComponentMap, value: RegistrationStruct, collected: ComponentMap) => {
   collected.set(value.__typename, value)
+  if (!value.dependencies) return
+
   for (let i = 0; i < value.dependencies.length; i++) {
     const next = components.get(value.dependencies[i] as string)
     if (next) recursivelyCollectFragments(components, next, collected)
@@ -188,10 +201,11 @@ const recursivelyCollectFragments = (components: ComponentMap, value: Registrati
  * Creates a new instance of Pigeon, your project will most likely only have one of these
  * but you can create multiple.
  */
-export const createPigeon = () => {
+export const createPigeon = <TRegistration extends RegistrationStruct>(comps?: TRegistration[]) => {
   const components: ComponentMap = new Map()
 
   return {
+    comps,
     components,
     /**
      * Use this to register your components to pigeon, under the hood this uses a `Map`.
@@ -208,11 +222,11 @@ export const createPigeon = () => {
      *
      * `scope` expects a non-empty string
      */
-    scope: <S extends Scope>(scope: S extends "" ? never : S) => {
+    scope: (scope: string extends "" ? never : string) => {
       const scopedComponents: ComponentMap = new Map()
 
       components.forEach((value) => {
-        if (value.scope.includes(scope)) {
+        if (value.scope && value.scope.includes(scope)) {
           scopedComponents.set(value.__typename, value)
         }
       })
