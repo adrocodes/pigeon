@@ -67,7 +67,30 @@ query PigeonPage {
 
 ### Data transformation
 
-> TODO:
+There are 2 ways you can approach building your site:
+
+1. Base your component props on the CMS data - from experience this usually results in me rebuilding a Hero banner every project.
+2. Build generic components and transform your CMS data to match your props.
+
+Option 2 is my favourite, it promotes reusability across projects and means you can continually build up a collection of components you can use across new projects. Saving time and allowing you to focus on building cool shit.
+
+With option 2 in mind, once we have our data we need to run some transformation on it. You'll most likely set up some type of mapping object to map the `__typename` to a transformation function and loop through the data each and transform each as needed.
+
+```ts
+const mapping = {
+  // These functions will probably be extracted into another file somewhere
+  PigeonHeroRecord: (input: HeroCmsData): HeroProps => {...},
+  PigeonTestimonialRecord: (input: TestimonialCmsData): TestimonialProps => {...}
+}
+
+const data = client.query(...)
+
+return data.pigeon.flexibleContent.map((value) => {
+  return mapping[value.__typename](value)
+})
+```
+
+This will mostly likely cause some TypeScript errors about mismatching types or possible undefined errors, but in that cause nothing a good old `any` can't fix.
 
 ### Reacting to model changes
 
