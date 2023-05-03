@@ -10,7 +10,6 @@ const genericImage = createRegistration({
     src: input.src,
     __typename: input.__typename,
   })),
-  scope: [],
 })
 
 const genericHero = createRegistration({
@@ -22,31 +21,24 @@ const genericHero = createRegistration({
     title: z.string(),
     image: genericImage.schema,
   }),
-  scope: ["page"],
 })
 
 describe("Create Pigeon", () => {
   test("Creating a instance", () => {
-    const pigeon = createPigeon()
+    const pigeon = createPigeon([genericHero])
 
-    expect(pigeon.register).not.toBeUndefined()
-    expect(pigeon.scope).not.toBeUndefined()
+    expect(pigeon.components).not.toBeUndefined()
   })
 
   test("Can register a component", () => {
-    const pigeon = createPigeon()
+    const pigeon = createPigeon([genericImage])
 
-    pigeon.register(genericImage)
-
-    expect(pigeon.components.has("Image")).toBeTruthy()
+    expect(pigeon.components.length).toBe(1)
   })
 
   test("Can register multiple components at once", () => {
-    const pigeon = createPigeon()
+    const pigeon = createPigeon([genericImage, genericHero])
 
-    pigeon.register(genericImage).register(genericHero)
-
-    expect(pigeon.components.has("Image")).toBeTruthy()
-    expect(pigeon.components.has("Hero")).toBeTruthy()
+    expect(pigeon.components.length).toBe(2)
   })
 })

@@ -8,7 +8,6 @@ const createGenericHero = () =>
     dependencies: [],
     fragment: "title",
     schema: z.object({ __typename: z.enum(["Hero"]) }),
-    scope: [],
   })
 
 describe("Create Registration", () => {
@@ -31,14 +30,10 @@ describe("Create Registration", () => {
       __typename: "Hero",
       fragment: ``,
       schema: z.object({ __typename: z.enum(["Hero"]) }),
-      scope: undefined,
     })
 
     expect(hero.dependencies).not.toBeUndefined()
     expect(hero.dependencies?.length).toBe(0)
-
-    expect(hero.scope).not.toBeUndefined()
-    expect(hero.scope?.length).toBe(0)
   })
 
   test("Doesn't override optional fields", () => {
@@ -47,15 +42,10 @@ describe("Create Registration", () => {
       fragment: ``,
       schema: z.object({ __typename: z.enum(["Hero"]) }),
       dependencies: ["Image"],
-      scope: ["page"],
     })
 
     expect(hero.dependencies).not.toBeUndefined()
     expect(hero.dependencies?.length).toBe(1)
     expect(hero.dependencies?.[0]).toEqual("Image")
-
-    expect(hero.scope).not.toBeUndefined()
-    expect(hero.scope?.length).toBe(1)
-    expect(hero.scope?.[0]).toEqual("page")
   })
 })
