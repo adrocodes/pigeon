@@ -1,15 +1,10 @@
-import type { ZodSchema } from "zod"
+import type { ZodSchema, z } from "zod"
 
 type Typename = string
-type Scope = string
 type ComponentMap = Map<Typename, RegistrationStruct>
 type Schema<TName extends Typename = Typename> = ZodSchema<{ __typename: TName }>
 
-export type RegistrationStruct<
-  TName extends Typename = Typename,
-  TScope extends Scope = Scope,
-  TSchema extends Schema = Schema<TName>,
-> = {
+export type RegistrationStruct<TName extends Typename = Typename, TSchema extends Schema = Schema<TName>> = {
   /**
    * This should match up with the `__typename` value in your
    * GraphQL CMS.
@@ -81,57 +76,6 @@ export type RegistrationStruct<
    */
   schema: TSchema
   /**
-   * The scope allows content to be scoped to specific regions/content models.
-   * Dynamically built queries & fragment inclusion will be based on the scope.
-   * This should only be applied to "top-level" content rather than the smaller
-   * pieces of content that makes up the top-level content.
-   *
-   * ```ts
-   * const Image = createRegistration({
-   *  __typename: "ImageRecord"
-   * })
-   *
-   * const Hero = createRegistration({
-   *  __typename: "HeroRecord",
-   *  dependencies: [Image.__typename],
-   *  scope: ["article"]
-   * })
-   *
-   * const query = gql`
-   *  ${pigeon.scope("article").fragments()}
-   *
-   *  query Article {
-   *    page(...) {
-   *      flexibleContent {
-   *        __typename
-   *        ${pigeon.scope("article").query()}
-   *      }
-   *    }
-   *  }
-   * `
-   *
-   * // Results in;
-   * ```text
-   * fragment ImageRecordFragment on ImageRecord {...}
-   * fragment HeroRecordFragment on HeroRecord {
-   *  image { ...ImageRecordFragment }
-   * }
-   *
-   * query Article {
-   *   page(...) {
-   *     flexibleContent {
-   *       __typename
-   *       ...on HeroRecord {
-   *         ...HeroRecordFragment
-   *       }
-   *     }
-   *   }
-   * }
-   * ```
-   * ```
-   */
-  scope?: TScope[]
-  /**
    * The generated Fragment name for this content. This is used when building
    * fragments for components that depend on this one.
    *
@@ -147,11 +91,10 @@ export type RegistrationStruct<
 /**
  * Data structure used when creating a registration for a piece of CMS content
  */
-type CreateRegistrationStruct<
-  TName extends Typename = Typename,
-  TScope extends Scope = Scope,
-  TSchema extends Schema = Schema<TName>,
-> = Omit<RegistrationStruct<TName, TScope, TSchema>, "fragmentName">
+type CreateRegistrationStruct<TName extends Typename = Typename, TSchema extends Schema = Schema<TName>> = Omit<
+  RegistrationStruct<TName, TSchema>,
+  "fragmentName"
+>
 
 /**
  * Use this method to prepare a piece of content for registration with Pigeon.
@@ -162,18 +105,13 @@ type CreateRegistrationStruct<
  *  __typename: "HeroRecord",
  *  fragment: `title description`,
  *  schema: z.object({}),
- *  dependencies: [image.__typename],
- *  scope: ["page", "articles"]
+ *  dependencies: [image.__typename]
  * })
  * ```
  */
-export const createRegistration = <
-  TName extends Typename = Typename,
-  TScope extends Scope = Scope,
-  TSchema extends Schema = Schema<TName>,
->(
-  payload: CreateRegistrationStruct<TName, TScope, TSchema>,
-): RegistrationStruct<TName, TScope, TSchema> => {
+export const createRegistration = <TName extends Typename = Typename, TSchema extends Schema = Schema<TName>>(
+  payload: CreateRegistrationStruct<TName, TSchema>,
+): RegistrationStruct<TName, TSchema> => {
   const fragmentName = `${payload.__typename}Fragment`
   const fragment = `fragment ${fragmentName} on ${payload.__typename} {${payload.fragment}}`
 
@@ -183,145 +121,124 @@ export const createRegistration = <
     fragment,
     fragmentName,
     schema: payload.schema,
-    scope: payload.scope || [],
   }
 }
 
-const recursivelyCollectFragments = (components: ComponentMap, value: RegistrationStruct, collected: ComponentMap) => {
+const recursivelyCollectFragments = <TRegistration extends RegistrationStruct>(
+  components: TRegistration[],
+  value: RegistrationStruct,
+  collected: ComponentMap,
+) => {
   collected.set(value.__typename, value)
   if (!value.dependencies) return
 
   for (let i = 0; i < value.dependencies.length; i++) {
-    const next = components.get(value.dependencies[i] as string)
+    const next = components.find((item) => item.__typename === (value.dependencies?.[i] as string))
     if (next) recursivelyCollectFragments(components, next, collected)
   }
 }
+
+type ExtractArrayTypes<ArrayType extends readonly unknown[]> = ArrayType extends readonly (infer ElementType)[]
+  ? ElementType
+  : never
 
 /**
  * Creates a new instance of Pigeon, your project will most likely only have one of these
  * but you can create multiple.
  */
-export const createPigeon = <TRegistration extends RegistrationStruct>(comps?: TRegistration[]) => {
-  const components: ComponentMap = new Map()
+export const createPigeon = <TRegistration extends RegistrationStruct>(components: TRegistration[]) => {
+  type TComponents = TRegistration[]
+  type TOutput = z.infer<ExtractArrayTypes<TComponents>["schema"]>
 
   return {
-    comps,
     components,
     /**
-     * Use this to register your components to pigeon, under the hood this uses a `Map`.
-     * Meaning you can register the same component twice and only the latest one will be
-     * used.
+     * Generates the query needed in the flexible content query.
+     *
+     * ```ts
+     * const query = gql`
+     *  query Article {
+     *    page(...) {
+     *      flexibleContent {
+     *        __typename
+     *        ${instance.query()}
+     *      }
+     *    }
+     *  }
+     * `
+     * ```
      */
-    register: function <T extends Typename = Typename>(component: RegistrationStruct<T>) {
-      components.set(component.__typename, component)
-      return this
+    query: () => {
+      const query: string[] = []
+
+      for (const value of components) {
+        query.push(`...on ${value.__typename} { ...${value.fragmentName} }`)
+      }
+
+      return query.join("\n")
     },
     /**
-     * Extract a subset of components by scope, use this to generate queries, fragments
-     * and validate data against the CMS data.
+     * Generates the fragments needed for a query.
      *
-     * `scope` expects a non-empty string
+     * ```ts
+     * const query = gql`
+     *  ${instance.fragments()}
+     *
+     *  query Article {
+     *    page(...) {
+     *      flexibleContent {
+     *        __typename
+     *        ${instance.query()}
+     *      }
+     *    }
+     *  }
+     * `
+     * ```
      */
-    scope: (scope: string extends "" ? never : string) => {
-      const scopedComponents: ComponentMap = new Map()
-
-      components.forEach((value) => {
-        if (value.scope && value.scope.includes(scope)) {
-          scopedComponents.set(value.__typename, value)
-        }
-      })
-
-      return {
-        components: scopedComponents,
-        /**
-         * Generates the query needed in the flexible content query.
-         *
-         * ```ts
-         * const query = gql`
-         *  query Article {
-         *    page(...) {
-         *      flexibleContent {
-         *        __typename
-         *        ${pigeon.scope("article").query()}
-         *      }
-         *    }
-         *  }
-         * `
-         * ```
-         */
-        query: () => {
-          const query: string[] = []
-
-          for (const [key, value] of scopedComponents) {
-            query.push(`...on ${key} { ...${value.fragmentName} }`)
-          }
-
-          return query.join("\n")
-        },
-        /**
-         * Generates the fragments needed for a scoped query.
-         *
-         * ```ts
-         * const query = gql`
-         *  ${pigeon.scope("article").fragments()}
-         *
-         *  query Article {
-         *    page(...) {
-         *      flexibleContent {
-         *        __typename
-         *        ${pigeon.scope("article").query()}
-         *      }
-         *    }
-         *  }
-         * `
-         * ```
-         */
-        fragments: () => {
-          const map: ComponentMap = new Map()
-          for (const value of scopedComponents.values()) {
-            recursivelyCollectFragments(components, value, map)
-          }
-
-          const fragments: string[] = []
-
-          for (const value of map.values()) {
-            fragments.push(value.fragment)
-          }
-
-          return fragments.join("\n")
-        },
-        /**
-         * Given a list of results from a GraphQL query, this function will loop through
-         * each entry and attempt to validate it against the registered schema.
-         *
-         * If a entry is not apart of the scope - it will be ignored and not present in the
-         * returned results.
-         *
-         * If **any** of the validations fail, this method will throw a `ZodError`.
-         *
-         * ### Example
-         * ```ts
-         * const { data } = await client.query({ query })
-         *
-         * const results = await pigeon.scope("page").validate(data.flexibleContent)
-         * ```
-         *
-         * @throws {import("zod").ZodError}
-         */
-        validate: async <T extends Typename, D extends { __typename: T }>(data: D[]) => {
-          const validationPromises = []
-          for (const value of data) {
-            const component = scopedComponents.get(value.__typename)
-
-            if (component) {
-              validationPromises.push(component.schema.parseAsync(value))
-            }
-          }
-
-          const result = await Promise.all(validationPromises)
-          return result
-        },
+    fragments: () => {
+      const map: ComponentMap = new Map()
+      for (const value of components) {
+        recursivelyCollectFragments(components, value, map)
       }
+
+      const fragments: string[] = []
+
+      for (const value of map.values()) {
+        fragments.push(value.fragment)
+      }
+
+      return fragments.join("\n")
+    },
+    /**
+     * Given a list of results from a GraphQL query, this function will loop through
+     * each entry and attempt to validate it against the registered schema.
+     *
+     * If a entry is not apart of the components - it will be ignored and not present in the
+     * returned results.
+     *
+     * If **any** of the validations fail, this method will throw a `ZodError`.
+     *
+     * ### Example
+     * ```ts
+     * const { data } = await client.query({ query })
+     *
+     * const results = await instance.validate(data.flexibleContent)
+     * ```
+     *
+     * @throws {import("zod").ZodError}
+     */
+    validate: async <T extends Typename, D extends { __typename: T }>(data: D[]): Promise<TOutput[]> => {
+      const validationPromises: Promise<TOutput>[] = []
+      for (const value of data) {
+        const component = components.find((item) => item.__typename === value.__typename)
+
+        if (component) {
+          validationPromises.push(component.schema.parseAsync(value))
+        }
+      }
+
+      const result = await Promise.all(validationPromises)
+      return result as TOutput[]
     },
   }
 }
