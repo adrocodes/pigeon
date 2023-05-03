@@ -1,5 +1,11 @@
 # @adrocodes/pigeon
 
+## 0.2.0
+
+### Minor Changes
+
+- 9b24c61: removed scope and related functionality
+
 ## 0.1.2
 
 ### Patch Changes
