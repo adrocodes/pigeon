@@ -149,6 +149,7 @@ type ExtractArrayTypes<ArrayType extends readonly unknown[]> = ArrayType extends
 export const createPigeon = <TRegistration extends RegistrationStruct>(components: TRegistration[]) => {
   type TComponents = TRegistration[]
   type TOutput = z.infer<ExtractArrayTypes<TComponents>["schema"]>
+  type IInput = z.input<ExtractArrayTypes<TComponents>["schema"]>
 
   return {
     components,
@@ -227,7 +228,7 @@ export const createPigeon = <TRegistration extends RegistrationStruct>(component
      *
      * @throws {import("zod").ZodError}
      */
-    validate: async <T extends Typename, D extends { __typename: T }>(data: D[]): Promise<TOutput[]> => {
+    validate: async (data: IInput[]): Promise<TOutput[]> => {
       const validationPromises: Promise<TOutput>[] = []
       for (const value of data) {
         const component = components.find((item) => item.__typename === value.__typename)
