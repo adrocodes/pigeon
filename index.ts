@@ -2,7 +2,7 @@ import type { ZodSchema, z } from "zod"
 
 type Typename = string
 type ComponentMap = Map<Typename, RegistrationStruct>
-type Schema<TName extends Typename = Typename> = ZodSchema<{ __typename: TName }>
+type Schema<TName extends Typename = Typename> = ZodSchema<{ __typename: TName; id: string }>
 
 export type RegistrationStruct<TName extends Typename = Typename, TSchema extends Schema = Schema<TName>> = {
   /**
