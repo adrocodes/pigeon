@@ -6,9 +6,8 @@ const genericImage = createRegistration({
   __typename: "Image",
   dependencies: [],
   fragment: "url",
-  schema: z.object({ __typename: z.enum(["Image"]), src: z.string(), id: z.string() }).transform((input) => ({
+  schema: z.object({ __typename: z.enum(["Image"]), src: z.string() }).transform((input) => ({
     src: input.src,
-    id: input.id,
     __typename: input.__typename,
   })),
 })
@@ -19,7 +18,6 @@ const genericHero = createRegistration({
   fragment: `title image { ...${genericImage.fragmentName} }`,
   schema: z.object({
     __typename: z.enum(["Hero"]),
-    id: z.string(),
     title: z.string(),
     image: genericImage.schema,
   }),
