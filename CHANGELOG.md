@@ -1,5 +1,11 @@
 # @adrocodes/pigeon
 
+## 0.2.1
+
+### Patch Changes
+
+- c33a26f: use zod input for validate
+
 ## 0.2.0
 
 ### Minor Changes
