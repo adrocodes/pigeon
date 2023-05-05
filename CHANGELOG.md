@@ -1,5 +1,11 @@
 # @adrocodes/pigeon
 
+## 0.2.2
+
+### Patch Changes
+
+- 60654bd: mark components and query only
+
 ## 0.2.1
 
 ### Patch Changes
