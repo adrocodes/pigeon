@@ -86,6 +86,11 @@ export type RegistrationStruct<TName extends Typename = Typename, TSchema extend
    * ```
    */
   fragmentName: string
+  /**
+   * The scope of the registration, this is used to determine if the
+   * registration should be included in the query.
+   */
+  query?: true
 }
 
 /**
@@ -94,7 +99,9 @@ export type RegistrationStruct<TName extends Typename = Typename, TSchema extend
 type CreateRegistrationStruct<TName extends Typename = Typename, TSchema extends Schema = Schema<TName>> = Omit<
   RegistrationStruct<TName, TSchema>,
   "fragmentName"
->
+> & {
+  fragmentName?: string
+}
 
 /**
  * Use this method to prepare a piece of content for registration with Pigeon.
@@ -112,7 +119,7 @@ type CreateRegistrationStruct<TName extends Typename = Typename, TSchema extends
 export const createRegistration = <TName extends Typename = Typename, TSchema extends Schema = Schema<TName>>(
   payload: CreateRegistrationStruct<TName, TSchema>,
 ): RegistrationStruct<TName, TSchema> => {
-  const fragmentName = `${payload.__typename}Fragment`
+  const fragmentName = payload.fragmentName || `${payload.__typename}Fragment`
   const fragment = `fragment ${fragmentName} on ${payload.__typename} {${payload.fragment}}`
 
   return {
@@ -121,6 +128,7 @@ export const createRegistration = <TName extends Typename = Typename, TSchema ex
     fragment,
     fragmentName,
     schema: payload.schema,
+    query: payload.query,
   }
 }
 
@@ -149,7 +157,7 @@ type ExtractArrayTypes<ArrayType extends readonly unknown[]> = ArrayType extends
 export const createPigeon = <TRegistration extends RegistrationStruct>(components: TRegistration[]) => {
   type TComponents = TRegistration[]
   type TOutput = z.infer<ExtractArrayTypes<TComponents>["schema"]>
-  type IInput = z.input<ExtractArrayTypes<TComponents>["schema"]>
+  type TInput = z.input<ExtractArrayTypes<TComponents>["schema"]>
 
   return {
     components,
@@ -173,7 +181,9 @@ export const createPigeon = <TRegistration extends RegistrationStruct>(component
       const query: string[] = []
 
       for (const value of components) {
-        query.push(`...on ${value.__typename} { ...${value.fragmentName} }`)
+        if (value.query) {
+          query.push(`...on ${value.__typename} { ...${value.fragmentName} }`)
+        }
       }
 
       return query.join("\n")
@@ -228,7 +238,7 @@ export const createPigeon = <TRegistration extends RegistrationStruct>(component
      *
      * @throws {import("zod").ZodError}
      */
-    validate: async (data: IInput[]): Promise<TOutput[]> => {
+    validate: async (data: TInput[]): Promise<TOutput[]> => {
       const validationPromises: Promise<TOutput>[] = []
       for (const value of data) {
         const component = components.find((item) => item.__typename === value.__typename)

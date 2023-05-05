@@ -21,6 +21,7 @@ const genericHero = createRegistration({
     title: z.string(),
     image: genericImage.schema,
   }),
+  query: true,
 })
 
 describe("Create Pigeon", () => {
@@ -38,6 +39,8 @@ describe("Create Pigeon", () => {
 
   test("Can register multiple components at once", () => {
     const pigeon = createPigeon([genericImage, genericHero])
+
+    pigeon.validate([])
 
     expect(pigeon.components.length).toBe(2)
   })
