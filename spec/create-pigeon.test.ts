@@ -40,8 +40,6 @@ describe("Create Pigeon", () => {
   test("Can register multiple components at once", () => {
     const pigeon = createPigeon([genericImage, genericHero])
 
-    pigeon.validate([])
-
     expect(pigeon.components.length).toBe(2)
   })
 })
