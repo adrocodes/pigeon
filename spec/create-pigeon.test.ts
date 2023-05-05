@@ -6,8 +6,8 @@ const genericImage = createRegistration({
   __typename: "Image",
   dependencies: [],
   fragment: "url",
-  schema: z.object({ __typename: z.enum(["Image"]), src: z.string() }).transform((input) => ({
-    src: input.src,
+  schema: z.object({ __typename: z.enum(["Image"]), url: z.string() }).transform((input) => ({
+    src: input.url,
     __typename: input.__typename,
   })),
 })

@@ -156,11 +156,16 @@ type ExtractArrayTypes<ArrayType extends readonly unknown[]> = ArrayType extends
  */
 export const createPigeon = <TRegistration extends RegistrationStruct>(components: TRegistration[]) => {
   type TComponents = TRegistration[]
-  type TOutput = z.infer<ExtractArrayTypes<TComponents>["schema"]>
+  type TOutput = z.output<ExtractArrayTypes<TComponents>["schema"]>
   type TInput = z.input<ExtractArrayTypes<TComponents>["schema"]>
+
+  const _input: TInput[] = []
+  const _output: TOutput[] = []
 
   return {
     components,
+    _input,
+    _output,
     /**
      * Generates the query needed in the flexible content query.
      *
@@ -253,3 +258,6 @@ export const createPigeon = <TRegistration extends RegistrationStruct>(component
     },
   }
 }
+
+export type output<T extends { _output: unknown }> = T["_output"]
+export type input<T extends { _input: unknown }> = T["_input"]
