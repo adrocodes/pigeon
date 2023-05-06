@@ -1,5 +1,11 @@
 # @adrocodes/pigeon
 
+## 0.3.0
+
+### Minor Changes
+
+- b4317ce: separate query and dependencies
+
 ## 0.2.3
 
 ### Patch Changes
