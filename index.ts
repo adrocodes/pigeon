@@ -57,7 +57,7 @@ export type RegistrationStruct<TName extends Typename = Typename, TSchema extend
    * })
    * ```
    */
-  dependencies?: Typename[]
+  dependencies?: RegistrationStruct<string, Schema<string>>[]
   /**
    * The schema used to validate and transform the CMS data into your
    * component props.
@@ -141,7 +141,7 @@ const recursivelyCollectFragments = <TRegistration extends RegistrationStruct>(
   if (!value.dependencies) return
 
   for (let i = 0; i < value.dependencies.length; i++) {
-    const next = components.find((item) => item.__typename === (value.dependencies?.[i] as string))
+    const next = components.find((item) => item.__typename === value.dependencies?.[i]?.__typename)
     if (next) recursivelyCollectFragments(components, next, collected)
   }
 }
@@ -151,8 +151,10 @@ type ExtractArrayTypes<ArrayType extends readonly unknown[]> = ArrayType extends
   : never
 
 /**
- * Creates a new instance of Pigeon, your project will most likely only have one of these
- * but you can create multiple.
+ * Creates a new instance of Pigeon, your project will have multiple of these depending
+ * on how you've structyured your content model.
+ *
+ * Only register the components that are at the top-level of your GraphQL query.
  */
 export const createPigeon = <TRegistration extends RegistrationStruct>(components: TRegistration[]) => {
   type TComponents = TRegistration[]
@@ -164,7 +166,33 @@ export const createPigeon = <TRegistration extends RegistrationStruct>(component
 
   return {
     components,
+    /**
+     * The input of the query, this is the data that is returned from the CMS.
+     *
+     * This is used for type checking the input of the validate method. Use the `input` type exported
+     * by Pigeon to type check the input of the validate method.
+     *
+     * ```ts
+     * import { type input } from "@adrocodes/pigeon"
+     *
+     * const pigeon = createPigeon([...])
+     * type Input = input<typeof pigeon>
+     * ```
+     */
     _input,
+    /**
+     * The output of the query, this is the data that is sent to your components.
+     *
+     * This is used for type checking the output of the validate method. Use the `output` type exported
+     * by Pigeon to type check the output of the validate method.
+     *
+     * ```ts
+     * import { type output } from "@adrocodes/pigeon"
+     *
+     * const pigeon = createPigeon([...])
+     * type Output = output<typeof pigeon>
+     * ```
+     */
     _output,
     /**
      * Generates the query needed in the flexible content query.

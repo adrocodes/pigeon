@@ -41,11 +41,17 @@ describe("Create Registration", () => {
       __typename: "Hero",
       fragment: ``,
       schema: z.object({ __typename: z.enum(["Hero"]) }),
-      dependencies: ["Image"],
+      dependencies: [
+        createRegistration({
+          __typename: "Image",
+          fragment: ``,
+          schema: z.object({ __typename: z.enum(["Image"]) }),
+        }),
+      ],
     })
 
     expect(hero.dependencies).not.toBeUndefined()
     expect(hero.dependencies?.length).toBe(1)
-    expect(hero.dependencies?.[0]).toEqual("Image")
+    expect(hero.dependencies?.[0]?.__typename).toEqual("Image")
   })
 })

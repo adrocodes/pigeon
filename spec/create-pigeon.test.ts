@@ -14,7 +14,7 @@ const genericImage = createRegistration({
 
 const genericHero = createRegistration({
   __typename: "Hero",
-  dependencies: [genericImage.__typename],
+  dependencies: [genericImage],
   fragment: `title image { ...${genericImage.fragmentName} }`,
   schema: z.object({
     __typename: z.enum(["Hero"]),
@@ -32,13 +32,13 @@ describe("Create Pigeon", () => {
   })
 
   test("Can register a component", () => {
-    const pigeon = createPigeon([genericImage])
+    const pigeon = createPigeon([genericHero])
 
     expect(pigeon.components.length).toBe(1)
   })
 
   test("Can register multiple components at once", () => {
-    const pigeon = createPigeon([genericImage, genericHero])
+    const pigeon = createPigeon([genericHero, genericImage])
 
     expect(pigeon.components.length).toBe(2)
   })
