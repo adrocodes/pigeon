@@ -54,4 +54,35 @@ describe("Create Registration", () => {
     expect(hero.dependencies?.length).toBe(1)
     expect(hero.dependencies?.[0]?.__typename).toEqual("Image")
   })
+
+  test("Can override fragment name", () => {
+    const hero = createRegistration({
+      __typename: "Hero",
+      fragment: ``,
+      schema: z.object({ __typename: z.enum(["Hero"]) }),
+      fragmentName: "CustomHeroFragment",
+    })
+
+    expect(hero.fragmentName).toEqual("CustomHeroFragment")
+  })
+
+  test("Can override fragment name and dependencies", () => {
+    const hero = createRegistration({
+      __typename: "Hero",
+      fragment: ``,
+      schema: z.object({ __typename: z.enum(["Hero"]) }),
+      fragmentName: "CustomHeroFragment",
+      dependencies: [
+        createRegistration({
+          __typename: "Image",
+          fragment: ``,
+          schema: z.object({ __typename: z.enum(["Image"]) }),
+        }),
+      ],
+    })
+
+    expect(hero.fragmentName).toEqual("CustomHeroFragment")
+    expect(hero.dependencies?.length).toBe(1)
+    expect(hero.dependencies?.[0]?.__typename).toEqual("Image")
+  })
 })
