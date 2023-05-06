@@ -126,17 +126,13 @@ export const createRegistration = <TName extends Typename = Typename, TSchema ex
   }
 }
 
-const recursivelyCollectFragments = <TRegistration extends RegistrationStruct>(
-  components: TRegistration[],
-  value: RegistrationStruct,
-  collected: ComponentMap,
-) => {
+const recursivelyCollectFragments = (value: RegistrationStruct, collected: ComponentMap) => {
   collected.set(value.__typename, value)
   if (!value.dependencies) return
 
   for (let i = 0; i < value.dependencies.length; i++) {
-    const next = components.find((item) => item.__typename === value.dependencies?.[i]?.__typename)
-    if (next) recursivelyCollectFragments(components, next, collected)
+    const next = value.dependencies[i]
+    if (next) recursivelyCollectFragments(next, collected)
   }
 }
 
@@ -234,7 +230,7 @@ export const createPigeon = <TRegistration extends RegistrationStruct>(component
     fragments: () => {
       const map: ComponentMap = new Map()
       for (const value of components) {
-        recursivelyCollectFragments(components, value, map)
+        recursivelyCollectFragments(value, map)
       }
 
       const fragments: string[] = []
