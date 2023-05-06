@@ -86,11 +86,6 @@ export type RegistrationStruct<TName extends Typename = Typename, TSchema extend
    * ```
    */
   fragmentName: string
-  /**
-   * The scope of the registration, this is used to determine if the
-   * registration should be included in the query.
-   */
-  query?: true
 }
 
 /**
@@ -128,7 +123,6 @@ export const createRegistration = <TName extends Typename = Typename, TSchema ex
     fragment,
     fragmentName,
     schema: payload.schema,
-    query: payload.query,
   }
 }
 
@@ -214,9 +208,7 @@ export const createPigeon = <TRegistration extends RegistrationStruct>(component
       const query: string[] = []
 
       for (const value of components) {
-        if (value.query) {
-          query.push(`...on ${value.__typename} { ...${value.fragmentName} }`)
-        }
+        query.push(`...on ${value.__typename} { ...${value.fragmentName} }`)
       }
 
       return query.join("\n")

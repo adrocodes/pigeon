@@ -21,7 +21,6 @@ const genericHero = createRegistration({
     title: z.string(),
     image: genericImage.schema,
   }),
-  query: true,
 })
 
 describe("Create Pigeon", () => {
