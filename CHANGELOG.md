@@ -1,5 +1,11 @@
 # @adrocodes/pigeon
 
+## 0.3.1
+
+### Patch Changes
+
+- a9c7bb8: update documentation
+
 ## 0.3.0
 
 ### Minor Changes
