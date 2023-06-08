@@ -84,4 +84,24 @@ describe("Pigeon Instance", () => {
 
     await expect(pigeon.validate(data)).rejects.toThrow()
   })
+
+  test("Registering components with the same typename", () => {
+    const altHero = createRegistration({
+      __typename: "Hero",
+      fragmentName: "AltHero",
+      dependencies: [genericImage],
+      fragment: `title image { ...${genericImage.fragmentName} }`,
+      schema: z.object({
+        __typename: z.enum(["Hero"]),
+        title: z.string(),
+        image: genericImage.schema,
+      }),
+    })
+    const pigeon = createPigeon([genericHero, altHero])
+
+    const fragments = pigeon.fragments()
+
+    expect(fragments).contains("fragment AltHero")
+    expect(fragments).contains("fragment HeroFragment")
+  })
 })
