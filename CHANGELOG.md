@@ -1,5 +1,11 @@
 # @adrocodes/pigeon
 
+## 0.3.2
+
+### Patch Changes
+
+- 109e666: fix when a typename has multiple fragments
+
 ## 0.3.1
 
 ### Patch Changes
