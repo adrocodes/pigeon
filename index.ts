@@ -127,7 +127,7 @@ export const createRegistration = <TName extends Typename = Typename, TSchema ex
 }
 
 const recursivelyCollectFragments = (value: RegistrationStruct, collected: ComponentMap) => {
-  collected.set(value.__typename, value)
+  collected.set(value.fragmentName, value)
   if (!value.dependencies) return
 
   for (let i = 0; i < value.dependencies.length; i++) {
