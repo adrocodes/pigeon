@@ -136,6 +136,37 @@ const recursivelyCollectFragments = (value: RegistrationStruct, collected: Compo
   }
 }
 
+/**
+ * Given a list of components, this method will collect all the fragments
+ * needed for a query. It will automatically collect any dependencies that
+ * are needed and make sure they are unique.
+ *
+ * This allows you to collect fragments without needing to create
+ * a Pigeon instance using `createPigeon`.
+ *
+ * ### Example
+ * ```ts
+ * const Hero = createRegistration({...})
+ * const Image = createRegistration({...})
+ *
+ * const fragments = collectFragments([Hero, Image])
+ * ```
+ */
+export const collectFragments = (components: RegistrationStruct[]) => {
+  const map: ComponentMap = new Map()
+  for (const value of components) {
+    recursivelyCollectFragments(value, map)
+  }
+
+  const fragments: string[] = []
+
+  for (const value of map.values()) {
+    fragments.push(value.fragment)
+  }
+
+  return fragments.join("\n")
+}
+
 type ExtractArrayTypes<ArrayType extends readonly unknown[]> = ArrayType extends readonly (infer ElementType)[]
   ? ElementType
   : never
@@ -228,18 +259,7 @@ export const createPigeon = <TRegistration extends RegistrationStruct>(component
      * ```
      */
     fragments: () => {
-      const map: ComponentMap = new Map()
-      for (const value of components) {
-        recursivelyCollectFragments(value, map)
-      }
-
-      const fragments: string[] = []
-
-      for (const value of map.values()) {
-        fragments.push(value.fragment)
-      }
-
-      return fragments.join("\n")
+      return collectFragments(components)
     },
     /**
      * Given a list of results from a GraphQL query, this function will loop through
