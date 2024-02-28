@@ -1,5 +1,11 @@
 # @adrocodes/pigeon
 
+## 0.4.0
+
+### Minor Changes
+
+- 67e1b90: Export additional collectFragments utility
+
 ## 0.3.2
 
 ### Patch Changes
