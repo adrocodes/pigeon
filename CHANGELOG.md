@@ -1,5 +1,11 @@
 # @adrocodes/pigeon
 
+## 0.5.0
+
+### Minor Changes
+
+- 68867ee: added createDependency method, removes the requirement of \_\_typename in schemas
+
 ## 0.4.0
 
 ### Minor Changes
