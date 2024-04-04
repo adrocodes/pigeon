@@ -88,11 +88,105 @@ export type RegistrationStruct<TName extends Typename = Typename, TSchema extend
   fragmentName: string
 }
 
+export type DependencyStruct<TName extends Typename = Typename, TSchema extends ZodSchema = ZodSchema> = {
+  /**
+   * This should match up with the `__typename` value in your
+   * GraphQL CMS.
+   */
+  __typename: TName
+
+  /**
+   * The fragment used to pull in the content specified by your `schema`.
+   *
+   * **IMPORTANT:** Do not wrap your fragment in the fragment defintion,
+   * only the inner part of the fragment is needed.
+   *
+   * ### Example:
+   * ```ts
+   * const Hero = createRegistration({
+   *  fragment: `title description`,
+   *  // ...rest
+   * })
+   * ```
+   *
+   * ### Example - dependency fragment
+   * If you need to use a fragment from a different registered component,
+   * you can use their registration definition.
+   *
+   * ```ts
+   * const Image = createRegistration({
+   *  __typename: "ImageRecord"
+   * })
+   *
+   * const Hero = createRegistration({
+   *  fragment: `image { ...${Image.fragmentName} }`,
+   *  dependencies: [Image.__typename]
+   *  // ...rest
+   * })
+   * ```
+   *
+   * During the query building process, the `dependencies` will be
+   * collected as needed.
+   * ```
+   */
+  fragment: string
+  /**
+   * A list of other registered content that you require in your `fragment`.
+   *
+   * ```ts
+   * const Hero = createRegistration({
+   *  fragment: `image { ...${Image.fragmentName} }`,
+   *  dependencies: [Image.__typename]
+   *  // ...rest
+   * })
+   * ```
+   */
+  dependencies?: (RegistrationStruct<string, Schema<string>> | DependencyStruct<string, ZodSchema>)[]
+  /**
+   * The schema used to validate and transform the CMS data into your
+   * component props.
+   *
+   * ```ts
+   * const Hero = createRegistration({
+   *  __typename: "Hero",
+   *  schema: z.object({
+   *      title: z.string()
+   *    })
+   *    .transform((input) => ({
+   *      heading: input.title
+   *    }))
+   * })
+   * ```
+   */
+  schema: TSchema
+  /**
+   * The generated Fragment name for this content. This is used when building
+   * fragments for components that depend on this one.
+   *
+   * ```ts
+   * const Hero = createRegistration({
+   *  fragment: `image { ...${Image.fragmentName} }`,
+   * })
+   * ```
+   */
+  fragmentName: string
+}
+
 /**
  * Data structure used when creating a registration for a piece of CMS content
  */
 type CreateRegistrationStruct<TName extends Typename = Typename, TSchema extends Schema = Schema<TName>> = Omit<
   RegistrationStruct<TName, TSchema>,
+  "fragmentName"
+> & {
+  fragmentName?: string
+}
+
+/**
+ * Data structure used when creating a dependency for a piece of CMS content
+ */
+type CreateDependencyStruct<TName extends Typename = Typename, TSchema extends ZodSchema = ZodSchema> = Omit<
+  DependencyStruct<TName, TSchema>,
   "fragmentName"
 > & {
   fragmentName?: string
@@ -107,7 +201,7 @@ type CreateRegistrationStruct<TName extends Typename = Typename, TSchema extends
  *  __typename: "HeroRecord",
  *  fragment: `title description`,
  *  schema: z.object({}),
- *  dependencies: [image.__typename]
+ *  dependencies: [image]
  * })
  * ```
  */
@@ -126,7 +220,35 @@ export const createRegistration = <TName extends Typename = Typename, TSchema ex
   }
 }
 
-const recursivelyCollectFragments = (value: RegistrationStruct, collected: ComponentMap) => {
+/**
+ * Use this method to prepare a piece of content for registration with Pigeon.
+ *
+ * ### Example
+ * ```ts
+ * const hero = createDependency({
+ *  __typename: "HeroRecord",
+ *  fragment: `title description`,
+ *  schema: z.object({}),
+ *  dependencies: [image]
+ * })
+ * ```
+ */
+export const createDependency = <TName extends Typename = Typename, TSchema extends ZodSchema = ZodSchema>(
+  payload: CreateDependencyStruct<TName, TSchema>,
+): DependencyStruct<TName, TSchema> => {
+  const fragmentName = payload.fragmentName || `${payload.__typename}Fragment`
+  const fragment = `fragment ${fragmentName} on ${payload.__typename} {${payload.fragment}}`
+
+  return {
+    __typename: payload.__typename,
+    dependencies: payload.dependencies || [],
+    fragment,
+    fragmentName,
+    schema: payload.schema,
+  }
+}
+
+const recursivelyCollectFragments = (value: RegistrationStruct | DependencyStruct, collected: ComponentMap) => {
   collected.set(value.fragmentName, value)
   if (!value.dependencies) return
 
@@ -152,7 +274,7 @@ const recursivelyCollectFragments = (value: RegistrationStruct, collected: Compo
  * const fragments = collectFragments([Hero, Image])
  * ```
  */
-export const collectFragments = (components: RegistrationStruct[]) => {
+export const collectFragments = (components: (RegistrationStruct | DependencyStruct)[]) => {
   const map: ComponentMap = new Map()
   for (const value of components) {
     recursivelyCollectFragments(value, map)
