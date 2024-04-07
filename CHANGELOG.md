@@ -1,5 +1,11 @@
 # @adrocodes/pigeon
 
+## 0.5.1
+
+### Patch Changes
+
+- b6cefd1: fix RegistrationStruct dependencies type definition
+
 ## 0.5.0
 
 ### Minor Changes
