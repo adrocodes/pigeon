@@ -52,12 +52,12 @@ export type RegistrationStruct<TName extends Typename = Typename, TSchema extend
    * ```ts
    * const Hero = createRegistration({
    *  fragment: `image { ...${Image.fragmentName} }`,
-   *  dependencies: [Image.__typename]
+   *  dependencies: [Image]
    *  // ...rest
    * })
    * ```
    */
-  dependencies?: RegistrationStruct<string, Schema<string>>[]
+  dependencies?: (RegistrationStruct<string, Schema<string>> | DependencyStruct<string, ZodSchema>)[]
   /**
    * The schema used to validate and transform the CMS data into your
    * component props.
@@ -136,7 +136,7 @@ export type DependencyStruct<TName extends Typename = Typename, TSchema extends 
    * ```ts
    * const Hero = createRegistration({
    *  fragment: `image { ...${Image.fragmentName} }`,
-   *  dependencies: [Image.__typename]
+   *  dependencies: [Image]
    *  // ...rest
    * })
    * ```
